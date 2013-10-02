@@ -1,0 +1,7 @@
+Setup notes.
+
+* Checkout git master for mesos and build.
+* Set the java.library.path to $MESOS_BUILD/src/.libs
+* start the master using $MESOS/bin/mesos-local.sh
+* start the java main in the scheduler
+
