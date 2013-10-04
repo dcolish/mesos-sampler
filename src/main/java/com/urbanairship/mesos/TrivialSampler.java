@@ -10,11 +10,15 @@ import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
 
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.apache.mesos.Protos.*;
 
 public class TrivialSampler implements Scheduler {
     private final Logger log = LogManager.getLogger(TrivialSampler.class);
+    private final Random random = new Random();
+    private final AtomicLong taskN = new AtomicLong();
 
     // args[0] must be the master address
     public static void main(String[] args) {
@@ -42,12 +46,14 @@ public class TrivialSampler implements Scheduler {
         /**
          * For the fun of this example, whenever we get an offer lets launch a task.
          */
+
+        int i = random.nextInt();
         for (Offer offer : offers) {
             CommandInfo commandInfo = CommandInfo.newBuilder()
-                    .setValue("echo hello")
+                    .setValue("curl -2s -w \"%{time_total}\\n\" -o /dev/null http://www.google.com/ >> /tmp/timings")
                     .build();
 
-            TaskID taskID = TaskID.newBuilder().setValue("1").build();
+            TaskID taskID = TaskID.newBuilder().setValue(String.valueOf(taskN.incrementAndGet())).build();
 
             TaskInfo info = TaskInfo.newBuilder()
                     .setName("Task")
@@ -80,7 +86,8 @@ public class TrivialSampler implements Scheduler {
                 // this would be a good place to reschedule tasks
                 log.warn("task " + taskStatus.getTaskId() + " failed");
             case TASK_FINISHED:
-                log.info("task " + taskStatus.getTaskId() + " completed");
+
+                log.info("task " + taskStatus.getTaskId() + " completed: " +                 taskStatus.getMessage());
                 break;
             case TASK_STARTING:
             case TASK_STAGING:
